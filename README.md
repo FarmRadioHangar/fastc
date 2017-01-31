@@ -1,0 +1,2 @@
+# fastc
+fessbox asterisk config
