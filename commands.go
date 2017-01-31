@@ -5,12 +5,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/urfave/cli"
+)
+
+const (
+	dongleFile = "modem.conf"
 )
 
 type DongleConfig map[string]struct {
@@ -65,12 +68,13 @@ func Dongles(ctx *cli.Context) error {
 	}
 	var buf bytes.Buffer
 	PrintAst(&buf, o)
-	fmt.Println(&buf)
-	return nil
+	return ioutil.WriteFile(filepath.Join(asteriskDir(), dongleFile),
+		buf.Bytes(), 0644,
+	)
 }
 
 func PatchAst(dst *Ast) (*Ast, error) {
-	name := filepath.Join(asteriskDir(), "modem.conf")
+	name := filepath.Join(asteriskDir(), dongleFile)
 	b, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
@@ -98,9 +102,7 @@ func PatchAst(dst *Ast) (*Ast, error) {
 
 	var buf bytes.Buffer
 	PrintAst(&buf, patch)
-	fmt.Println(&buf)
 	o := &Ast{}
-	fmt.Println(len(patch.Sections))
 	for _, v := range patch.Sections {
 		for _, i := range v.values {
 			if i.key == "imei" {
@@ -115,7 +117,6 @@ func PatchAst(dst *Ast) (*Ast, error) {
 		}
 		o.Sections = append(o.Sections, v)
 	}
-	fmt.Println("HERE")
 	return o, nil
 }
 
