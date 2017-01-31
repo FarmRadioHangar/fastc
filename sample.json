@@ -1,0 +1,13 @@
+{
+	"airtel1": {
+		"imei": "352324524524352",
+		"imsi": "642343423245245",
+		"name": "airtel1",
+		"number": "+255686442266",
+		"rx-gain": 2,
+		"tx-gain": 4,
+		"label": "Displayed instead of number from SIM (if specified)",
+		"sms": "own" ,
+		"calls": "own"
+	}
+}
