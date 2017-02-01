@@ -140,7 +140,10 @@ func bySection(a *Ast, name string) *NodeSection {
 }
 
 func asteriskDir() string {
-	return os.Getenv("ASTERISK_CONFIG")
+	if dir := os.Getenv("ASTERISK_CONFIG"); dir != "" {
+		return dir
+	}
+	return "/etc/asterisk"
 }
 
 func ReadFromStdin() ([]byte, error) {
