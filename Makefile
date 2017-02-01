@@ -1,5 +1,5 @@
 VERSION=0.1.0
-NAME=fconf_$(VERSION)
+NAME=fastc_$(VERSION)
 
 build:
 	gox  \
