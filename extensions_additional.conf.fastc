@@ -220,31 +220,41 @@ OUTDISABLE_18 = on
 OUTKEEPCID_18 = off
 FORCEDOUTCID_18 = 
 PREFIX_TRUNK_18 = 
+
 ; miopa 
-{{ $trunkNumber := 19 }}
-{{ $startTrunk $trunkNumber }}
+{{AssignTrunk 19}}
+{{if .Dongles}}
 {{ $k,$v:=range .Dongles}}
-{{if .$v.NotDisabled}}
-OUT_19 = AMP:Dongle/airtel1/$OUTNUM$
-OUTCID_19 = +255689514544
-OUTMAXCHANS_19 = 
-OUTFAIL_19 = 
-OUTPREFIX_19 = 
-OUTDISABLE_19 = off
-OUTKEEPCID_19 = off
-FORCEDOUTCID_19 = 
-PREFIX_TRUNK_19 = 
+{{if .$v.totDisabled}}
+OUT_{{$v.trunkID}} = AMP:Dongle/{{$v.Name}}/$OUTNUM$
+OUTCID_{{$v.trunkID}} = {{$v.phoneNumber}}
+OUTMAXCHANS_{{$v.trunkID}} = 
+OUTFAIL_{{$v.trunkID}} = 
+OUTPREFIX_{{$v.trunkID}} = 
+OUTDISABLE_{{$v.trunkID}} = off
+OUTKEEPCID_{{$v.trunkID}} = off
+FORCEDOUTCID_{{$v.trunkID}} = 
+PREFIX_TRUNK_{{$v.trunkID}} = 
 {{end}}
 {{end}}
-OUT_20 = AMP:Dongle/vodacom1/$OUTNUM$
-OUTCID_20 = +255788333330
-OUTMAXCHANS_20 = 
-OUTFAIL_20 = 
-OUTPREFIX_20 = 
-OUTDISABLE_20 = off
-OUTKEEPCID_20 = off
-FORCEDOUTCID_20 = 
-PREFIX_TRUNK_20 = 
+{{end}}
+
+{{if .Sip}}
+{{ $k,$v:=range .Dongles}}
+{{if .$v.totDisabled}}
+OUT_{{$v.trunkID}} = AMP:Dongle/{{$v.Name}}/$OUTNUM$
+OUTCID_{{$v.trunkID}} = {{$v.phoneNumber}}
+OUTMAXCHANS_{{$v.trunkID}} = 
+OUTFAIL_{{$v.trunkID}} = 
+OUTPREFIX_{{$v.trunkID}} = 
+OUTDISABLE_{{$v.trunkID}} = off
+OUTKEEPCID_{{$v.trunkID}} = off
+FORCEDOUTCID_{{$v.trunkID}} = 
+PREFIX_TRUNK_{{$v.trunkID}} = 
+{{end}}
+{{end}}
+{{end}}
+
 ALLOW_SIP_ANON = no
 SIPLANG = 
 #include globals_custom.conf
@@ -2648,14 +2658,18 @@ exten => _.,n,Goto(ext-did,s,1)
 ; miopa: outgoing trunks definition. All dongles that are supposed to make outgoing calls should be listed here.
 [ext-trunk]
 include => ext-trunk-custom
+
+{{if .Dongles}}
 {{ $k,$v:=range .Dongles}}
-{{if .$v.NotDisabled}}
-exten => {{ trunk_num }},1,Set(SS=$)
-exten => {{ trunk_num }},n,Set(TDIAL_STRING=Dongle/{{$v.Name }}/${SS}{OUTNUM})
-exten => {{ trunk_num }},n,Set(DIAL_TRUNK={{ trunk_num }})
-exten => {{ trunk_num }},n,Goto(ext-trunk,tcustom,1)
+{{if .$v.notDisabled}}
+exten => {{ $v.trunkID }},1,Set(SS=$)
+exten => {{ $v.trunkID }},n,Set(TDIAL_STRING=Dongle/{{$v.Name }}/${SS}{OUTNUM})
+exten => {{ $v.trunkID }},n,Set(DIAL_TRUNK={{ $v.trunkID}})
+exten => {{ $v.trunkID }},n,Goto(ext-trunk,tcustom,1)
 {{end}}
 {{end}}
+{{end}}
+
 exten => 20,1,Set(SS=$)
 exten => 20,n,Set(TDIAL_STRING=Dongle/vodacom1/${SS}{OUTNUM})
 exten => 20,n,Set(DIAL_TRUNK=20)
@@ -2738,8 +2752,22 @@ exten => _X.,1,Macro(user-callerid,LIMIT,EXTERNAL,)
 exten => _X.,n,Gosub(sub-record-check,s,1(out,${EXTEN},dontcare))
 exten => _X.,n,Set(MOHCLASS=${IF($["${MOHCLASS}"=""]?default:${MOHCLASS})})
 exten => _X.,n,Set(_NODEST=)
-exten => _X.,n,Macro(dialout-trunk,19,${EXTEN},,off)
-exten => _X.,n,Macro(dialout-trunk,20,${EXTEN},,off)
+
+{{if .Dongles}}
+{{ $k,$v:=range .Dongles}}
+{{if .$v.notDisabled}}
+exten => _X.,n,Macro(dialout-trunk,{{$v.trunkID}},${EXTEN},,off)
+{{end}}
+{{end}}
+{{end}}
+{{if .Sip}}
+{{ $k,$v:=range .Sip}}
+{{if .$v.notDisabled}}
+exten => _X.,n,Macro(dialout-trunk,{{$v.trunkID}},${EXTEN},,off)
+{{end}}
+{{end}}
+{{end}}
+
 exten => _X.,n,Macro(outisbusy,)
 
 ;--== end of [outrt-2] ==--;
