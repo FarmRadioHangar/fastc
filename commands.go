@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,25 +16,35 @@ import (
 
 const (
 	dongleFile = "modem.conf"
+	diaplanTpl = "extensions_additional.conf.fastc"
+	diaplanOut = "extensions_additional.conf"
 )
 
-type DongleConfig map[string]struct {
-	IMEI string `json:"imei"`
-	IMSI string `json:"imsi"`
-}
+type DongleConfig map[string]map[string]interface{}
 
 func ToAST(c DongleConfig) *Ast {
 	a := &Ast{}
 	for k, v := range c {
 		s := &NodeSection{name: k}
-		s.values = append(s.values, &nodeIdent{
-			key:   "imei",
-			value: v.IMEI,
-		})
-		s.values = append(s.values, &nodeIdent{
-			key:   "imsi",
-			value: v.IMSI,
-		})
+		if imsi, ok := v["imsi"]; ok {
+			s.values = append(s.values, &nodeIdent{
+				key:   "imsi",
+				value: fmt.Sprint(imsi),
+			})
+		}
+		if rx, ok := v["rx-gain"]; ok {
+			s.values = append(s.values, &nodeIdent{
+				key:   "rx-gain",
+				value: fmt.Sprint(rx),
+			})
+		}
+		if tx, ok := v["tx-gain"]; ok {
+			s.values = append(s.values, &nodeIdent{
+				key:   "tx-gain",
+				value: fmt.Sprint(tx),
+			})
+		}
+
 		a.Sections = append(a.Sections, s)
 	}
 	return a
@@ -68,9 +80,20 @@ func Dongles(ctx *cli.Context) error {
 	}
 	var buf bytes.Buffer
 	PrintAst(&buf, o)
-	return ioutil.WriteFile(filepath.Join(asteriskDir(), dongleFile),
+	err = ioutil.WriteFile(filepath.Join(asteriskDir(), dongleFile),
 		buf.Bytes(), 0644,
 	)
+	if err != nil {
+		return err
+	}
+	var tctx []map[string]interface{}
+	for _, v := range c {
+		if calls, ok := v["calls"]; ok {
+			v["notDisabled"] = calls.(string) != "disable"
+		}
+		tctx = append(tctx, v)
+	}
+	return writeDialPlan(&TemplateContext{Dongles: tctx})
 }
 
 func PatchAst(dst *Ast) (*Ast, error) {
@@ -149,4 +172,65 @@ func asteriskDir() string {
 func ReadFromStdin() ([]byte, error) {
 	r := bufio.NewReader(os.Stdin)
 	return r.ReadBytes('\n')
+}
+
+type TemplateContext struct {
+	Sip     []map[string]interface{}
+	Dongles []map[string]interface{}
+}
+
+func (c *TemplateContext) AssgignTrunk(from int) string {
+	// start with dongles
+	var d []map[string]interface{}
+	for _, v := range c.Dongles {
+		v["trunkID"] = from
+		d = append(d, v)
+		from++
+	}
+	c.Dongles = d
+
+	var s []map[string]interface{}
+	for _, v := range c.Sip {
+		v["trunkID"] = from
+		s = append(s, v)
+		from++
+	}
+	c.Dongles = d
+	return ""
+}
+
+func astToMap(a *Ast) []map[string]interface{} {
+	var o []map[string]interface{}
+	for _, s := range a.Sections {
+		v := make(map[string]interface{})
+		v["name"] = s.name
+		for _, vv := range s.values {
+			v[vv.key] = vv.value
+		}
+		v["notDisabled"] = true
+		o = append(o, v)
+	}
+	return o
+}
+
+func writeDialPlan(ctx *TemplateContext) error {
+	b, err := ioutil.ReadFile(filepath.Join(asteriskDir(), diaplanTpl))
+	if err != nil {
+		return err
+	}
+	fm := make(template.FuncMap)
+	fm["AssignTrunk"] = ctx.AssgignTrunk
+	fm["plain"] = func(s string) template.HTML {
+		return template.HTML(s)
+	}
+	tpl, err := template.New("plan").Funcs(fm).Parse(string(b))
+	if err != nil {
+		return err
+	}
+	var o bytes.Buffer
+	err = tpl.Execute(&o, ctx)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filepath.Join(asteriskDir(), diaplanOut), o.Bytes(), 0600)
 }

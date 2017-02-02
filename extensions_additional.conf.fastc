@@ -223,37 +223,20 @@ PREFIX_TRUNK_18 =
 
 ; miopa 
 {{AssignTrunk 19}}
-{{if .Dongles}}
-{{ $k,$v:=range .Dongles}}
-{{if .$v.totDisabled}}
-OUT_{{$v.trunkID}} = AMP:Dongle/{{$v.Name}}/$OUTNUM$
-OUTCID_{{$v.trunkID}} = {{$v.phoneNumber}}
+{{range $v:=.Dongles}}
+{{if $v.notDisabled}}
+OUT_{{$v.trunkID}} = AMP:Dongle/{{$v.name}}/$OUTNUM$
+OUTCID_{{$v.trunkID}} = {{plain $v.number}}
 OUTMAXCHANS_{{$v.trunkID}} = 
-OUTFAIL_{{$v.trunkID}} = 
+OUTFAI_L{{$v.trunkID}} = 
 OUTPREFIX_{{$v.trunkID}} = 
 OUTDISABLE_{{$v.trunkID}} = off
 OUTKEEPCID_{{$v.trunkID}} = off
 FORCEDOUTCID_{{$v.trunkID}} = 
-PREFIX_TRUNK_{{$v.trunkID}} = 
-{{end}}
+PREFIX_TRUNK_{{$v.trunkID}} =
 {{end}}
 {{end}}
 
-{{if .Sip}}
-{{ $k,$v:=range .Dongles}}
-{{if .$v.totDisabled}}
-OUT_{{$v.trunkID}} = AMP:Dongle/{{$v.Name}}/$OUTNUM$
-OUTCID_{{$v.trunkID}} = {{$v.phoneNumber}}
-OUTMAXCHANS_{{$v.trunkID}} = 
-OUTFAIL_{{$v.trunkID}} = 
-OUTPREFIX_{{$v.trunkID}} = 
-OUTDISABLE_{{$v.trunkID}} = off
-OUTKEEPCID_{{$v.trunkID}} = off
-FORCEDOUTCID_{{$v.trunkID}} = 
-PREFIX_TRUNK_{{$v.trunkID}} = 
-{{end}}
-{{end}}
-{{end}}
 
 ALLOW_SIP_ANON = no
 SIPLANG = 
@@ -2658,22 +2641,15 @@ exten => _.,n,Goto(ext-did,s,1)
 ; miopa: outgoing trunks definition. All dongles that are supposed to make outgoing calls should be listed here.
 [ext-trunk]
 include => ext-trunk-custom
-
-{{if .Dongles}}
-{{ $k,$v:=range .Dongles}}
-{{if .$v.notDisabled}}
+{{range $v:=.Dongles}}
+{{if $v.notDisabled}}
 exten => {{ $v.trunkID }},1,Set(SS=$)
-exten => {{ $v.trunkID }},n,Set(TDIAL_STRING=Dongle/{{$v.Name }}/${SS}{OUTNUM})
-exten => {{ $v.trunkID }},n,Set(DIAL_TRUNK={{ $v.trunkID}})
+exten => {{ $v.trunkID }},n,Set(TDIAL_STRING=Dongle/{{$v.name }}/${SS}{OUTNUM})
+exten => {{ $v.trunkID }},n,Set(DIAL_TRUNK={{ $v.trunkID  }})
 exten => {{ $v.trunkID }},n,Goto(ext-trunk,tcustom,1)
 {{end}}
 {{end}}
-{{end}}
 
-exten => 20,1,Set(SS=$)
-exten => 20,n,Set(TDIAL_STRING=Dongle/vodacom1/${SS}{OUTNUM})
-exten => 20,n,Set(DIAL_TRUNK=20)
-exten => 20,n,Goto(ext-trunk,tcustom,1)
 
 exten => tcustom,1,Set(OUTBOUND_GROUP=OUT_${DIAL_TRUNK})
 exten => tcustom,n,GotoIf($["${OUTMAXCHANS_${DIAL_TRUNK}}" = ""]?nomax)
@@ -2752,21 +2728,12 @@ exten => _X.,1,Macro(user-callerid,LIMIT,EXTERNAL,)
 exten => _X.,n,Gosub(sub-record-check,s,1(out,${EXTEN},dontcare))
 exten => _X.,n,Set(MOHCLASS=${IF($["${MOHCLASS}"=""]?default:${MOHCLASS})})
 exten => _X.,n,Set(_NODEST=)
+{{range $v:=.Dongles}}
+{{if $v.notDisabled}}
+exten => _X.,n,Macro(dialout-trunk,{{$v.trunkID}},${EXTEN},,off)
+{{end}}
+{{end}}
 
-{{if .Dongles}}
-{{ $k,$v:=range .Dongles}}
-{{if .$v.notDisabled}}
-exten => _X.,n,Macro(dialout-trunk,{{$v.trunkID}},${EXTEN},,off)
-{{end}}
-{{end}}
-{{end}}
-{{if .Sip}}
-{{ $k,$v:=range .Sip}}
-{{if .$v.notDisabled}}
-exten => _X.,n,Macro(dialout-trunk,{{$v.trunkID}},${EXTEN},,off)
-{{end}}
-{{end}}
-{{end}}
 
 exten => _X.,n,Macro(outisbusy,)
 
