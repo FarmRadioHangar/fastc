@@ -1,10 +1,10 @@
-VERSION=0.1.1
+VERSION=0.1.2
 NAME=fastc_$(VERSION)
 
 build:
 	gox  \
-		-output "bin/{{.Dir}}/{{.OS}}_{{.Arch}}/{{.Dir}}_$(VERSION)/{{.Dir}}" \
+		-output "bin/{{.Dir}}_$(VERSION)/{{.OS}}_{{.Arch}}/{{.Dir}}" \
 		-osarch "linux/arm" github.com/FarmRadioHangar/fastc
 
 tar:
-	cd bin/ && tar -zcvf $(NAME).tar.gz  fastc/
+	cd bin/ && tar -zcvf $(NAME).tar.gz  fastc_${VERSION}/
