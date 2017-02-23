@@ -7,7 +7,7 @@
 		"rx-gain": 2,
 		"tx-gain": 4,
 		"label": "Displayed instead of number from SIM (if specified)",
-		"sms": "own" ,
-		"calls": "own"
+		"sms_out": "own" ,
+		"calls_out": "own"
 	}
 }
