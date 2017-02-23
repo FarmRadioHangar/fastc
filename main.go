@@ -15,7 +15,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:    "dongles",
-			Aliases: []string{"e"},
+			Aliases: []string{"d"},
 			Usage:   "configures asterisk dongles with json",
 			Action:  Dongles,
 		},

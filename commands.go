@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	dongleFile = "modem.conf"
+	dongleFile = "dongle_fessbox.conf"
 	diaplanTpl = "extensions_additional.conf.fastc"
 	diaplanOut = "extensions_additional.conf"
 )
@@ -74,12 +74,12 @@ func Dongles(ctx *cli.Context) error {
 		return err
 	}
 	a := ToAST(c)
-	o, err := PatchAst(a)
-	if err != nil {
-		return err
-	}
+	// o, err := PatchAst(a)
+	// if err != nil {
+	// 	return err
+	// }
 	var buf bytes.Buffer
-	PrintAst(&buf, o)
+	PrintAst(&buf, a)
 	err = ioutil.WriteFile(filepath.Join(asteriskDir(), dongleFile),
 		buf.Bytes(), 0644,
 	)
