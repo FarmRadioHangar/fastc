@@ -1,4 +1,4 @@
-VERSION=0.1.3
+VERSION=0.1.4
 NAME=fastc_$(VERSION)
 
 build:
@@ -6,5 +6,8 @@ build:
 		-output "bin/{{.Dir}}_$(VERSION)/{{.OS}}_{{.Arch}}/{{.Dir}}" \
 		-osarch "linux/arm" github.com/FarmRadioHangar/fastc
 
-tar:
+copy-tpl:
+	cp extensions_additional.conf.fastc bin/fastc_${VERSION}
+
+tar: copy-tpl
 	cd bin/ && tar -zcvf $(NAME).tar.gz  fastc_${VERSION}/
