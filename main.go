@@ -9,7 +9,7 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "0.1.2"
+	app.Version = "0.1.3"
 	app.Name = "fastc"
 	app.Usage = "configures asterisk using json"
 	app.Commands = []cli.Command{
