@@ -89,7 +89,10 @@ func Dongles(ctx *cli.Context) error {
 	var tctx []map[string]interface{}
 	for _, v := range c {
 		if calls, ok := v["calls_out"]; ok {
-			v["notDisabled"] = calls.(string) != "disable"
+			not := calls.(string) != "disabled"
+			if not {
+				v["notDisabled"] = not
+			}
 		}
 		tctx = append(tctx, v)
 	}
