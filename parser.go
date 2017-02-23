@@ -71,7 +71,7 @@ func PrintAst(dst io.Writer, src *Ast) {
 			fmt.Fprint(dst, "\n\n")
 			continue
 		}
-		fmt.Fprintf(dst, "\n [%s]\n", v.name)
+		fmt.Fprintf(dst, "\n[%s]\n", v.name)
 		for _, sub := range v.values {
 			fmt.Fprintf(dst, "%s=%s \n", sub.key, sub.value)
 		}
